@@ -16,10 +16,10 @@ only when `git --version` is older than `2.13.0` (adjust with
 
 ## Naming Convention
 
-Split large images into fixed-size parts named like:
+Split large images into fixed-size parts stored under a per-container directory:
 
-- `vllm.00001.sif`, `vllm.00002.sif`, ...
-- `rag.00001.sif`, `rag.00002.sif`, ...
+- `vllm/vllm.00001.sif`, `vllm/vllm.00002.sif`, ...
+- `rag/rag.00001.sif`, `rag/rag.00002.sif`, ...
 
 These are tracked by Git LFS via `.gitattributes` patterns.
 
@@ -32,7 +32,7 @@ These are tracked by Git LFS via `.gitattributes` patterns.
 Split and reassemble images with `scripts/sif_parts.sh`:
 
 ```bash
-# Split into 2GiB parts (default) in the current directory
+# Split into 2GiB parts (default) under ./vllm/
 scripts/sif_parts.sh split --input /path/to/vllm.sif --prefix vllm
 
 # Reassemble
