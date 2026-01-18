@@ -23,6 +23,10 @@ Split large images into fixed-size parts named like:
 
 These are tracked by Git LFS via `.gitattributes` patterns.
 
+## Images
+- `nginx/nginx-unprivileged.sif`: nginx container used by interactive session workflows.
+- `vnc/vncserver.sif`: VNC server container used by interactive session workflows.
+
 ## Helper Script
 
 Split and reassemble images with `scripts/sif_parts.sh`:
