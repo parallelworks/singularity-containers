@@ -9,21 +9,21 @@ Usage:
   scripts/sif_parts.sh install-lfs
 
 Commands:
-  split   Split a SIF into numeric parts like vllm.00001.sif
+  split   Split a SIF into numeric parts like vllm/vllm.00001.sif
   join    Reassemble parts into a single .sif file
   install-lfs  Install Git LFS locally to ~/bin if missing
 
 Split options:
   --input PATH        Input .sif file (required)
   --prefix NAME       Output prefix (default: input basename without .sif)
-  --out-dir DIR       Output directory (default: .)
+  --out-dir DIR       Output base directory (default: .; parts go under <out-dir>/<prefix>/)
   --chunk-size SIZE   Chunk size for split (default: 2G)
   --digits N          Number of digits (default: 5)
   --start N           Starting index (default: 1)
 
 Join options:
   --prefix NAME       Prefix to match (required)
-  --in-dir DIR        Input directory (default: .)
+  --in-dir DIR        Input base directory (default: .; parts under <in-dir>/<prefix>/)
   --output PATH       Output .sif file (default: <prefix>.sif)
 
 Examples:
@@ -182,13 +182,14 @@ split_sif() {
     prefix="${prefix%.sif}"
   fi
 
-  mkdir -p "$out_dir"
+  local parts_dir="${out_dir}/${prefix}"
+  mkdir -p "$parts_dir"
 
   if split --help 2>/dev/null | grep -q -- '--numeric-suffixes'; then
     split -b "$chunk_size" -d -a "$digits" \
       --numeric-suffixes="$start" \
       --additional-suffix=".sif" \
-      "$input" "${out_dir}/${prefix}."
+      "$input" "${parts_dir}/${prefix}."
     return 0
   fi
 
@@ -199,7 +200,7 @@ split_sif() {
 
   export SIF_INPUT="$input"
   export SIF_PREFIX="$prefix"
-  export SIF_OUT_DIR="$out_dir"
+  export SIF_PARTS_DIR="$parts_dir"
   export SIF_CHUNK_SIZE="$chunk_size"
   export SIF_DIGITS="$digits"
   export SIF_START="$start"
@@ -216,7 +217,7 @@ def parse_size(value: str) -> int:
 
 input_path = os.environ["SIF_INPUT"]
 prefix = os.environ["SIF_PREFIX"]
-out_dir = os.environ["SIF_OUT_DIR"]
+out_dir = os.environ["SIF_PARTS_DIR"]
 chunk_size = parse_size(os.environ["SIF_CHUNK_SIZE"])
 digits = int(os.environ["SIF_DIGITS"])
 start = int(os.environ["SIF_START"])
@@ -239,6 +240,7 @@ PY
 
 join_sif() {
   local prefix="" in_dir="." output=""
+  local parts_dir=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -268,12 +270,18 @@ join_sif() {
     exit 1
   fi
 
+  if [[ -d "${in_dir}/${prefix}" ]]; then
+    parts_dir="${in_dir}/${prefix}"
+  else
+    parts_dir="${in_dir}"
+  fi
+
   shopt -s nullglob
-  mapfile -t parts < <(ls -1 "${in_dir}/${prefix}."[0-9][0-9][0-9][0-9][0-9].sif 2>/dev/null | LC_ALL=C sort)
+  mapfile -t parts < <(ls -1 "${parts_dir}/${prefix}."[0-9][0-9][0-9][0-9][0-9].sif 2>/dev/null | LC_ALL=C sort)
   shopt -u nullglob
 
   if [[ ${#parts[@]} -eq 0 ]]; then
-    echo "ERROR: No parts found for prefix '${prefix}' in ${in_dir}" >&2
+    echo "ERROR: No parts found for prefix '${prefix}' in ${parts_dir}" >&2
     exit 1
   fi
 
