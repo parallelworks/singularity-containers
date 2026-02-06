@@ -5,3 +5,5 @@ nginx/*.sif filter=lfs diff=lfs merge=lfs -text
 vnc/*.sif filter=lfs diff=lfs merge=lfs -text
 kasmvnc/*.sif filter=lfs diff=lfs merge=lfs -text
 kasmproxy/*.sif filter=lfs diff=lfs merge=lfs -text
+kasmvnc-rocky9/*.sif filter=lfs diff=lfs merge=lfs -text
+kasmvnc-ubuntu/*.sif filter=lfs diff=lfs merge=lfs -text
